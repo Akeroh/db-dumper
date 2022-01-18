@@ -3,39 +3,56 @@
 namespace Spatie\DbDumper;
 
 use Spatie\DbDumper\Compressors\Compressor;
+use Spatie\DbDumper\Compressors\GzipCompressor;
 use Spatie\DbDumper\Exceptions\CannotSetParameter;
 use Spatie\DbDumper\Exceptions\DumpFailed;
 use Symfony\Component\Process\Process;
 
 abstract class DbDumper
 {
-    protected string $dbName = '';
+    /** @var string */
+    protected $dbName;
 
-    protected string $userName = '';
+    /** @var string */
+    protected $schemaName;
 
-    protected string $password = '';
+    /** @var string */
+    protected $userName;
 
-    protected string $host = 'localhost';
+    /** @var string */
+    protected $password;
 
-    protected int $port = 5432;
+    /** @var string */
+    protected $host = 'localhost';
 
-    protected string $socket = '';
+    /** @var int */
+    protected $port = 5432;
 
-    protected int $timeout = 0;
+    /** @var string */
+    protected $socket = '';
 
-    protected string $dumpBinaryPath = '';
+    /** @var int */
+    protected $timeout = 0;
 
-    protected array $includeTables = [];
+    /** @var string */
+    protected $dumpBinaryPath = '';
 
-    protected array $excludeTables = [];
+    /** @var array */
+    protected $includeTables = [];
 
-    protected array $extraOptions = [];
+    /** @var array */
+    protected $excludeTables = [];
 
-    protected array $extraOptionsAfterDbName = [];
+    /** @var array */
+    protected $extraOptions = [];
 
-    protected ?object $compressor = null;
+    /** @var array */
+    protected $extraOptionsAfterDbName = [];
 
-    public static function create(): static
+    /** @var object */
+    protected $compressor = null;
+
+    public static function create()
     {
         return new static();
     }
@@ -45,28 +62,65 @@ abstract class DbDumper
         return $this->dbName;
     }
 
-    public function setDbName(string $dbName): self
+    /**
+     * @param string $dbName
+     *
+     * @return $this
+     */
+    public function setDbName(string $dbName)
     {
         $this->dbName = $dbName;
 
         return $this;
     }
 
-    public function setUserName(string $userName): self
+    /**
+     * @param string $schemaName
+     *
+     * @return $this
+     */
+    public function setSchemaName(string $schemaName)
+    {
+        $this->schemaName = $schemaName;
+
+        return $this;
+    }
+
+    public function getSchemaName(): string
+    {
+        return $this->schemaName;
+    }
+
+    /**
+     * @param string $userName
+     *
+     * @return $this
+     */
+    public function setUserName(string $userName)
     {
         $this->userName = $userName;
 
         return $this;
     }
 
-    public function setPassword(string $password): self
+    /**
+     * @param string $password
+     *
+     * @return $this
+     */
+    public function setPassword(string $password)
     {
         $this->password = $password;
 
         return $this;
     }
 
-    public function setHost(string $host): self
+    /**
+     * @param string $host
+     *
+     * @return $this
+     */
+    public function setHost(string $host)
     {
         $this->host = $host;
 
@@ -78,34 +132,61 @@ abstract class DbDumper
         return $this->host;
     }
 
-    public function setPort(int $port): self
+    /**
+     * @param int $port
+     *
+     * @return $this
+     */
+    public function setPort(int $port)
     {
         $this->port = $port;
 
         return $this;
     }
 
-    public function setSocket(string $socket): self
+    /**
+     * @param string $socket
+     *
+     * @return $this
+     */
+    public function setSocket(string $socket)
     {
         $this->socket = $socket;
 
         return $this;
     }
 
-    public function setTimeout(int $timeout): self
+    /**
+     * @param int $timeout
+     *
+     * @return $this
+     */
+    public function setTimeout(int $timeout)
     {
         $this->timeout = $timeout;
 
         return $this;
     }
 
-    public function setDumpBinaryPath(string $dumpBinaryPath): self
+    public function setDumpBinaryPath(string $dumpBinaryPath)
     {
-        if ($dumpBinaryPath !== '' && ! str_ends_with($dumpBinaryPath, '/')) {
+        if ($dumpBinaryPath !== '' && substr($dumpBinaryPath, -1) !== '/') {
             $dumpBinaryPath .= '/';
         }
 
         $this->dumpBinaryPath = $dumpBinaryPath;
+
+        return $this;
+    }
+
+    /**
+     * @deprecated
+     *
+     * @return $this
+     */
+    public function enableCompression()
+    {
+        $this->compressor = new GzipCompressor();
 
         return $this;
     }
@@ -115,20 +196,27 @@ abstract class DbDumper
         return $this->compressor->useExtension();
     }
 
-    public function useCompressor(Compressor $compressor): self
+    public function useCompressor(Compressor $compressor)
     {
         $this->compressor = $compressor;
 
         return $this;
     }
 
-    public function includeTables(string | array $includeTables): self
+    /**
+     * @param string|array $includeTables
+     *
+     * @return $this
+     *
+     * @throws \Spatie\DbDumper\Exceptions\CannotSetParameter
+     */
+    public function includeTables($includeTables)
     {
-        if (! empty($this->excludeTables)) {
+        if (!empty($this->excludeTables)) {
             throw CannotSetParameter::conflictingParameters('includeTables', 'excludeTables');
         }
 
-        if (! is_array($includeTables)) {
+        if (!is_array($includeTables)) {
             $includeTables = explode(', ', $includeTables);
         }
 
@@ -137,13 +225,20 @@ abstract class DbDumper
         return $this;
     }
 
-    public function excludeTables(string | array $excludeTables): self
+    /**
+     * @param string|array $excludeTables
+     *
+     * @return $this
+     *
+     * @throws \Spatie\DbDumper\Exceptions\CannotSetParameter
+     */
+    public function excludeTables($excludeTables)
     {
-        if (! empty($this->includeTables)) {
+        if (!empty($this->includeTables)) {
             throw CannotSetParameter::conflictingParameters('excludeTables', 'includeTables');
         }
 
-        if (! is_array($excludeTables)) {
+        if (!is_array($excludeTables)) {
             $excludeTables = explode(', ', $excludeTables);
         }
 
@@ -152,33 +247,43 @@ abstract class DbDumper
         return $this;
     }
 
-    public function addExtraOption(string $extraOption): self
+    /**
+     * @param string $extraOption
+     *
+     * @return $this
+     */
+    public function addExtraOption(string $extraOption)
     {
-        if (! empty($extraOption)) {
+        if (!empty($extraOption)) {
             $this->extraOptions[] = $extraOption;
         }
 
         return $this;
     }
 
-    public function addExtraOptionAfterDbName(string $extraOptionAfterDbName): self
+    /**
+     * @param string $extraOptionAtEnd
+     *
+     * @return $this
+     */
+    public function addExtraOptionAfterDbName(string $extraOptionAfterDbName)
     {
-        if (! empty($extraOptionAfterDbName)) {
+        if (!empty($extraOptionAfterDbName)) {
             $this->extraOptionsAfterDbName[] = $extraOptionAfterDbName;
         }
 
         return $this;
     }
 
-    abstract public function dumpToFile(string $dumpFile): void;
+    abstract public function dumpToFile(string $dumpFile);
 
-    public function checkIfDumpWasSuccessFul(Process $process, string $outputFile): void
+    public function checkIfDumpWasSuccessFul(Process $process, string $outputFile)
     {
-        if (! $process->isSuccessful()) {
+        if (!$process->isSuccessful()) {
             throw DumpFailed::processDidNotEndSuccessfully($process);
         }
 
-        if (! file_exists($outputFile)) {
+        if (!file_exists($outputFile)) {
             throw DumpFailed::dumpfileWasNotCreated();
         }
 
@@ -200,13 +305,13 @@ abstract class DbDumper
 
     protected function echoToFile(string $command, string $dumpFile): string
     {
-        $dumpFile = '"'.addcslashes($dumpFile, '\\"').'"';
+        $dumpFile = '"' . addcslashes($dumpFile, '\\"') . '"';
 
         if ($this->compressor) {
             return $this->getCompressCommand($command, $dumpFile);
         }
 
-        return $command.' > '.$dumpFile;
+        return $command . ' > ' . $dumpFile;
     }
 
     protected function determineQuote(): string
@@ -216,6 +321,6 @@ abstract class DbDumper
 
     protected function isWindows(): bool
     {
-        return str_starts_with(strtoupper(PHP_OS), 'WIN');
+        return strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
     }
 }
