@@ -51,7 +51,7 @@ class PostgreSql extends DbDumper
             '-h '.($this->socket === '' ? $this->host : $this->socket),
             "-p {$this->port}",
             "-n {$this->schemaName}",
-            "--column-inserts"
+            "--column-inserts",
         ];
 
         if ($this->useInserts) {

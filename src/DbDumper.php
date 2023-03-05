@@ -212,11 +212,11 @@ abstract class DbDumper
      */
     public function includeTables($includeTables)
     {
-        if (!empty($this->excludeTables)) {
+        if (! empty($this->excludeTables)) {
             throw CannotSetParameter::conflictingParameters('includeTables', 'excludeTables');
         }
 
-        if (!is_array($includeTables)) {
+        if (! is_array($includeTables)) {
             $includeTables = explode(', ', $includeTables);
         }
 
@@ -234,11 +234,11 @@ abstract class DbDumper
      */
     public function excludeTables($excludeTables)
     {
-        if (!empty($this->includeTables)) {
+        if (! empty($this->includeTables)) {
             throw CannotSetParameter::conflictingParameters('excludeTables', 'includeTables');
         }
 
-        if (!is_array($excludeTables)) {
+        if (! is_array($excludeTables)) {
             $excludeTables = explode(', ', $excludeTables);
         }
 
@@ -254,7 +254,7 @@ abstract class DbDumper
      */
     public function addExtraOption(string $extraOption)
     {
-        if (!empty($extraOption)) {
+        if (! empty($extraOption)) {
             $this->extraOptions[] = $extraOption;
         }
 
@@ -268,7 +268,7 @@ abstract class DbDumper
      */
     public function addExtraOptionAfterDbName(string $extraOptionAfterDbName)
     {
-        if (!empty($extraOptionAfterDbName)) {
+        if (! empty($extraOptionAfterDbName)) {
             $this->extraOptionsAfterDbName[] = $extraOptionAfterDbName;
         }
 
@@ -279,7 +279,7 @@ abstract class DbDumper
 
     public function checkIfDumpWasSuccessFul(Process $process, string $outputFile)
     {
-        if (!$process->isSuccessful()) {
+        if (! $process->isSuccessful()) {
             throw DumpFailed::processDidNotEndSuccessfully($process);
         }
 
